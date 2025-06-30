@@ -28,7 +28,7 @@ def print_welcome():
     """Affiche le message de bienvenue avec style"""
     os.system('clear' if os.name != 'nt' else 'cls')
     print(Fore.CYAN + Style.BRIGHT + "╔" + "═" * 58 + "╗")
-    print(Fore.CYAN + Style.BRIGHT + "║" + " " * 15 + "MESSAGERIE TERMINAL" + " " * 22 + "║")
+    print(Fore.CYAN + Style.BRIGHT + "║" + " " * 12 + "MESSAGERIE TERMINAL ROOMS" + " " * 19 + "║")
     print(Fore.CYAN + Style.BRIGHT + "╚" + "═" * 58 + "╝")
     print()
 
@@ -58,6 +58,8 @@ def print_help():
     """Affiche l'aide des commandes disponibles"""
     help_text = f"""
 {Fore.YELLOW + Style.BRIGHT}📋 COMMANDES DISPONIBLES:
+
+{Fore.CYAN + Style.BRIGHT}💬 CHAT GÉNÉRAL:
 {Fore.GREEN}┌─────────────────────────────────────────────────────────┐
 {Fore.GREEN}│ /help              - Afficher cette aide               │
 {Fore.GREEN}│ /list              - Lister les utilisateurs connectés │
@@ -65,6 +67,26 @@ def print_help():
 {Fore.GREEN}│ /quit              - Quitter la messagerie             │
 {Fore.GREEN}│ /clear             - Effacer l'écran                   │
 {Fore.GREEN}└─────────────────────────────────────────────────────────┘
+
+{Fore.CYAN + Style.BRIGHT}🏠 GESTION DES ROOMS:
+{Fore.GREEN}┌─────────────────────────────────────────────────────────┐
+{Fore.GREEN}│ /rooms             - Lister toutes les rooms           │
+{Fore.GREEN}│ /create <room>     - Créer une nouvelle room           │
+{Fore.GREEN}│ /join <room>       - Rejoindre une room existante      │
+{Fore.GREEN}│ /leave             - Retourner à la room générale      │
+{Fore.GREEN}└─────────────────────────────────────────────────────────┘
+
+{Fore.CYAN + Style.BRIGHT}🚫 GESTION DES BLOCAGES:
+{Fore.GREEN}┌─────────────────────────────────────────────────────────┐
+{Fore.GREEN}│ /block <user>      - Bloquer un utilisateur            │
+{Fore.GREEN}│ /unblock <user>    - Débloquer un utilisateur          │
+{Fore.GREEN}│ /blocked           - Voir les utilisateurs bloqués     │
+{Fore.GREEN}└─────────────────────────────────────────────────────────┘
+
+{Fore.YELLOW}💡 EXEMPLES:
+{Fore.CYAN}   /create gaming     {Fore.WHITE}→ Crée la room "gaming"
+{Fore.CYAN}   /join gaming       {Fore.WHITE}→ Rejoint la room "gaming"  
+{Fore.CYAN}   /block spammer     {Fore.WHITE}→ Bloque l'utilisateur "spammer"
     """
     print(help_text)
 
@@ -110,6 +132,30 @@ def receive(sock):
             sock.close()
             break
 
+def show_room_examples():
+    """Affiche des exemples d'utilisation des rooms"""
+    examples = f"""
+{Fore.YELLOW + Style.BRIGHT}🏠 EXEMPLES D'UTILISATION DES ROOMS:
+
+{Fore.CYAN}Créer une room pour discuter de gaming:
+{Fore.WHITE}   /create gaming
+
+{Fore.CYAN}Rejoindre une room existante:
+{Fore.WHITE}   /join gaming
+
+{Fore.CYAN}Voir qui est dans votre room actuelle:
+{Fore.WHITE}   /list
+
+{Fore.CYAN}Voir toutes les rooms disponibles:
+{Fore.WHITE}   /rooms
+
+{Fore.CYAN}Retourner à la room générale:
+{Fore.WHITE}   /leave
+
+{Fore.GREEN}💡 Les rooms sont parfaites pour organiser des discussions thématiques !
+    """
+    print(examples)
+
 # Interface de bienvenue
 print_welcome()
 
@@ -154,7 +200,8 @@ elif response != "AUTH_OK":
     client.close()
 else:
     print(format_message("SYSTEM", f"{format_timestamp()} Connecté au chat !"))
-    print(format_message("SYSTEM", "Tapez /help pour voir les commandes disponibles"))
+    print(format_message("SYSTEM", "Tapez /help pour voir toutes les commandes disponibles"))
+    print(format_message("SYSTEM", "Tapez /examples pour voir des exemples d'utilisation des rooms"))
     print_separator()
     
     # Démarrer le thread de réception
@@ -170,6 +217,9 @@ else:
             # Gérer les commandes locales
             if msg == "/help":
                 print_help()
+                continue
+            elif msg == "/examples":
+                show_room_examples()
                 continue
             elif msg == "/clear":
                 print_welcome()
