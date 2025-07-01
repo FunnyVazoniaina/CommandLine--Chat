@@ -1,6 +1,7 @@
 import socket
 import threading
 import os
+import getpass  
 from datetime import datetime
 from colorama import init, Fore, Back, Style
 
@@ -162,7 +163,7 @@ print_welcome()
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 try:
-    client.connect(("127.0.0.1", 5000))
+    client.connect(("192.168.43.247", 5000))
     print(format_message("SYSTEM", f"{format_timestamp()} Connecté au serveur"))
 except Exception as e:
     print(format_message("ERROR", f"Impossible de se connecter: {e}"))
@@ -176,7 +177,9 @@ print_separator()
 
 choice = input("Tapez 1 pour se connecter, 2 pour s'inscrire: ")
 pseudo = input("Votre pseudo: ")
-password = input("Mot de passe: ")
+
+# Utiliser getpass pour masquer le mot de passe
+password = getpass.getpass("Mot de passe: ")
 
 print(client.recv(1024).decode())  # demande choix
 client.send(choice.encode())
