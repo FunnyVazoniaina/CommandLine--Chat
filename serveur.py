@@ -144,15 +144,23 @@ def broadcast_to_room(room_name, message, sender_socket=None):
 
 def send_private(from_user, to_user, message):
     """Envoie un message privé avec notification"""
+    # Vérifier si l'expéditeur est bloqué par le destinataire
+    if is_user_blocked(to_user, from_user):
+        return "BLOCKED_BY_RECEIVER"
+    
+    # Vérifier si l'expéditeur a bloqué le destinataire
+    if is_user_blocked(from_user, to_user):
+        return "BLOCKED_BY_SENDER"
+    
     for client, pseudo in clients.items():
         if pseudo == to_user:
             try:
                 private_msg = f"PRIVATE:{format_timestamp()} [Privé de {from_user}] {message}"
                 client.send(private_msg.encode())
-                return True
+                return "SUCCESS"
             except:
-                return False
-    return False
+                return "ERROR"
+    return "USER_NOT_FOUND"
 
 def handle_client(client_socket):
     pseudo = ""
@@ -306,17 +314,24 @@ def handle_client(client_socket):
                 parts = msg.split(" ", 2)
                 if len(parts) == 3:
                     dest_pseudo, message = parts[1], parts[2]
-                    if not is_user_blocked(dest_pseudo, pseudo):  # Vérifier si on n'est pas bloqué
-                        if send_private(pseudo, dest_pseudo, message):
-                            # Confirmer l'envoi à l'expéditeur
-                            confirm_msg = f"PRIVATE_SENT:{format_timestamp()} Message privé envoyé à {dest_pseudo}: {message}"
-                            client_socket.send(confirm_msg.encode())
-                            log_server(f"Message privé de {pseudo} vers {dest_pseudo}")
-                        else:
-                            error_msg = f"ERROR:{format_timestamp()} Utilisateur '{dest_pseudo}' introuvable"
-                            client_socket.send(error_msg.encode())
-                    else:
+                    result = send_private(pseudo, dest_pseudo, message)
+                    
+                    if result == "SUCCESS":
+                        # Confirmer l'envoi à l'expéditeur
+                        confirm_msg = f"PRIVATE_SENT:{format_timestamp()} Message privé envoyé à {dest_pseudo}: {message}"
+                        client_socket.send(confirm_msg.encode())
+                        log_server(f"Message privé de {pseudo} vers {dest_pseudo}")
+                    elif result == "BLOCKED_BY_RECEIVER":
                         error_msg = f"ERROR:{format_timestamp()} Vous êtes bloqué par cet utilisateur"
+                        client_socket.send(error_msg.encode())
+                    elif result == "BLOCKED_BY_SENDER":
+                        error_msg = f"ERROR:{format_timestamp()} Vous avez bloqué cet utilisateur. Débloquez-le d'abord avec /unblock {dest_pseudo}"
+                        client_socket.send(error_msg.encode())
+                    elif result == "USER_NOT_FOUND":
+                        error_msg = f"ERROR:{format_timestamp()} Utilisateur '{dest_pseudo}' introuvable"
+                        client_socket.send(error_msg.encode())
+                    else:
+                        error_msg = f"ERROR:{format_timestamp()} Erreur lors de l'envoi du message"
                         client_socket.send(error_msg.encode())
                 else:
                     error_msg = f"ERROR:{format_timestamp()} Usage: /msg <utilisateur> <message>"
@@ -379,3 +394,6 @@ except KeyboardInterrupt:
     log_server("Arrêt du serveur...", "WARNING")
 finally:
     server.close()
+
+                        
+                        
